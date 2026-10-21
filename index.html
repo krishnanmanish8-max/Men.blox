@@ -1,0 +1,420 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080b12">
+<title>BloxHorn</title>
+
+<style>
+:root {
+  --bg: #080b12;
+  --panel: #0b1220;
+  --blue: #8bbcff;
+  --text: #dce8ff;
+  --muted: #647995;
+  --line: #263d5b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Courier New", monospace;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* Loading screen */
+#loading {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  background: #080b12;
+  transition: opacity .5s;
+}
+
+.loader-title {
+  font-size: clamp(30px, 7vw, 64px);
+  font-weight: bold;
+  letter-spacing: .15em;
+  color: var(--blue);
+  text-shadow: 0 0 25px #468fff55;
+}
+
+.loader-bar {
+  width: min(240px, 65vw);
+  height: 2px;
+  background: #1c2b40;
+  overflow: hidden;
+}
+
+.loader-bar::after {
+  content: "";
+  display: block;
+  height: 100%;
+  width: 40%;
+  background: var(--blue);
+  animation: load 1s ease-in-out infinite;
+}
+
+@keyframes load {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(250%); }
+}
+
+#loading small {
+  color: var(--muted);
+  letter-spacing: 3px;
+}
+
+/* Terminal */
+#terminal {
+  display: none;
+  height: 100%;
+  overflow: auto;
+  padding: clamp(16px, 4vw, 38px);
+}
+
+.ascii {
+  color: var(--blue);
+  font-size: clamp(7px, 1.5vw, 15px);
+  line-height: 1.1;
+  white-space: pre;
+  width: max-content;
+  max-width: 100%;
+  overflow: hidden;
+  text-shadow: 0 0 15px #468fff55;
+}
+
+.term-help {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 15px 0 24px;
+}
+
+.term-line {
+  margin: 7px 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.term-prompt {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+#cmd {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  color: var(--blue);
+  border: 0;
+  outline: 0;
+  font: inherit;
+  caret-color: var(--blue);
+}
+
+/* Home / browser */
+#home {
+  display: none;
+  height: 100%;
+  padding: 18px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-inner {
+  width: 100%;
+  max-width: 760px;
+}
+
+.home-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+
+#clock {
+  text-align: center;
+  font-size: clamp(38px, 9vw, 76px);
+  font-weight: bold;
+  letter-spacing: -3px;
+  color: var(--text);
+  text-shadow: 0 0 22px #468fff22;
+}
+
+#day {
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 3px;
+  margin: 8px 0 35px;
+}
+
+.search {
+  display: flex;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.search:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 20px #468fff12;
+}
+
+#query {
+  flex: 1;
+  min-width: 0;
+  padding: 16px;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: inherit;
+}
+
+#query::placeholder {
+  color: var(--muted);
+}
+
+#searchBtn {
+  background: transparent;
+  color: var(--blue);
+  border: 0;
+  border-left: 1px solid var(--line);
+  padding: 0 20px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.bottom {
+  position: fixed;
+  bottom: 12px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #354761;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+@media (max-width: 480px) {
+  #terminal {
+    padding: 15px;
+  }
+
+  .term-help {
+    line-height: 1.8;
+  }
+
+  #home {
+    padding: 14px;
+  }
+
+  #query {
+    padding: 13px 10px;
+    font-size: 13px;
+  }
+
+  #searchBtn {
+    padding: 0 12px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="loader-title">BLOXHORN</div>
+  <div class="loader-bar"></div>
+  <small>INITIALIZING</small>
+</div>
+
+<!-- Terminal -->
+<div id="terminal">
+<pre class="ascii">
+ ____  _      ___  __  __
+| __ )| |    / _ \|  \/  |
+|  _ \| |   | | | | |\/| |
+| |_) | |___| |_| | |  | |
+|____/|_____\___/|_|  |_|
+</pre>
+
+<div class="term-help">
+  help — commands · proxy — home · clear — reset
+</div>
+
+<div id="out"></div>
+
+<div class="term-prompt">
+  <span>&gt;</span>
+  <input id="cmd" autocomplete="off"
+    autocapitalize="off" spellcheck="false"
+    aria-label="Terminal command">
+</div>
+</div>
+
+<!-- Minimal browser home -->
+<div id="home">
+  <div class="home-inner">
+    <div class="home-top">
+      <span>bloxhorn // browser</span>
+      <span>● ready</span>
+    </div>
+
+    <div id="clock">00:00:00</div>
+    <div id="day"></div>
+
+    <form class="search" id="searchForm">
+      <input id="query" placeholder="Search or enter a URL"
+        autocomplete="off" aria-label="Search or URL">
+      <button id="searchBtn" type="submit">GO ↗</button>
+    </form>
+  </div>
+</div>
+
+<div class="bottom">BLOXHORN</div>
+
+<script>
+const loading = document.getElementById("loading");
+const terminal = document.getElementById("terminal");
+const home = document.getElementById("home");
+const cmd = document.getElementById("cmd");
+const out = document.getElementById("out");
+
+function boot() {
+  loading.style.opacity = "0";
+
+  setTimeout(() => {
+    loading.style.display = "none";
+    terminal.style.display = "block";
+    cmd.focus();
+  }, 500);
+}
+
+setTimeout(boot, 1400);
+
+function line(text) {
+  const el = document.createElement("div");
+  el.className = "term-line";
+  el.textContent = text;
+  out.appendChild(el);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+cmd.addEventListener("keydown", e => {
+  if (e.key !== "Enter") return;
+
+  const raw = cmd.value.trim();
+  cmd.value = "";
+
+  if (!raw) return;
+
+  line("> " + raw);
+
+  const name = raw.toLowerCase();
+
+  if (name === "help") {
+    line("help       commands");
+    line("proxy      open home");
+    line("clear      clear terminal");
+    line("about      about BloxHorn");
+    line("date       current date");
+    line("echo       print text");
+    line("exit       return to terminal");
+  } else if (name === "proxy") {
+    terminal.style.display = "none";
+    home.style.display = "flex";
+    document.getElementById("query").focus();
+  } else if (name === "clear") {
+    out.textContent = "";
+  } else if (name === "about") {
+    line("BloxHorn // personal browser project");
+  } else if (name === "date") {
+    line(new Date().toString());
+  } else if (name.startsWith("echo ")) {
+    line(raw.slice(5));
+  } else if (name === "exit") {
+    home.style.display = "none";
+    terminal.style.display = "block";
+    cmd.focus();
+  } else {
+    line("Unknown command. Type help.");
+  }
+});
+
+function updateClock() {
+  const now = new Date();
+
+  document.getElementById("clock").textContent =
+    now.toLocaleTimeString([], {
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    });
+
+  document.getElementById("day").textContent =
+    now.toLocaleDateString([], {
+      weekday: "long",
+      day: "2-digit",
+      month: "long"
+    }).toUpperCase();
+}
+
+updateClock();
+setInterval(updateClock, 1000);
+
+document.getElementById("searchForm").addEventListener("submit", e => {
+  e.preventDefault();
+
+  const value = document.getElementById("query").value.trim();
+  if (!value) return;
+
+  let destination;
+
+  try {
+    const candidate = value.match(/^https?:\/\//i)
+      ? value
+      : "https://" + value;
+
+    const parsed = new URL(candidate);
+
+    // Treat domain-like input as a website.
+    if (parsed.hostname.includes(".") &&
+        !parsed.hostname.includes(" ")) {
+      destination = parsed.href;
+    }
+  } catch {}
+
+  if (destination) {
+    // Opens the destination directly, not through a proxy.
+    window.location.href = destination;
+  } else {
+    window.location.href =
+      "https://duckduckgo.com/?q=" + encodeURIComponent(value);
+  }
+});
+</script>
+
+</body>
+</html>
